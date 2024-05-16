@@ -1,0 +1,8 @@
+pandas
+numpy
+matplotlib
+scikit-learn==1.2.2
+joblib
+fastapi
+uvicorn
+np
