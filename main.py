@@ -46,7 +46,7 @@ async def check_phishing_email(emailBody: str = Form(...)):
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
 
 @api_router.post("/url/")
-async def check_phishing_email(url: str = Form(...)):
+async def check_phishing_url(url: str = Form(...)):
   """
   This endpoint takes an email body as input and predicts if it's a phishing email.
   """
@@ -60,6 +60,25 @@ async def check_phishing_email(url: str = Form(...)):
     # Handle any errors during prediction
     print(f"An error occurred: {e}")
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
+
+
+@api_router.post("/url/dns/")
+async def check_phishing_url_dns(url: str = Form(...),local_dns_resolution:str=Form(...)):
+  """
+  This endpoint takes an email body as input and predicts if it's a phishing email.
+  """
+  try:
+    # Call your logic function to predict phishing (replace with your logic)
+    prediction = predict_url_phishing(url)
+
+    # Return the prediction result
+    return {"phishing": prediction}
+  except Exception as e:
+    # Handle any errors during prediction
+    print(f"An error occurred: {e}")
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
+
+
 
 
 # Include the API router in the main app

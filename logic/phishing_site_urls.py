@@ -13,21 +13,42 @@ import numpy as np
 import random
 from collections import Counter
 
+
+
+from urllib.parse import urlparse
+import re
+
 def abnormal_url(URL):
+    """
+    Checks if the URL is abnormal or not.
+
+    Args:
+        URL (str): The URL to be checked.
+
+    Returns:
+        int: Returns 1 if the URL is abnormal, 0 otherwise.
+    """
     hostname = urlparse(URL).hostname
     hostname = str(hostname)
     match = re.search(hostname, URL)
     if match:
-        # print match.group()
         return 1
     else:
-        # print 'No matching pattern found'
         return 0
 
 
 
 #Use of IP or not in domain
 def having_ip_address(URL: str) -> int:
+    """
+    Checks if the URL contains an IP address.
+
+    Args:
+        URL (str): The URL to check.
+        
+    Returns:
+        int: Returns 1 if the URL contains an IP address, 0 otherwise.
+    """
     match = re.search(
         '(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.'
         '([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\/)|'  # IPv4
@@ -42,6 +63,15 @@ def having_ip_address(URL: str) -> int:
     
 
 def sum_count_special_characters(URL: str) -> int:
+    """
+    Counts the number of special characters in a URL.
+
+    Args:
+        URL (str): The URL to count the special characters from.
+        
+    Returns:
+        int: The number of special characters in the URL.
+    """
     special_chars = ['@','?','-','=','.','#','%','+','$','!','*',',','//']
 
     num_special_chars = sum(char in special_chars for char in URL)

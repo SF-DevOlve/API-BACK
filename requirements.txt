@@ -6,3 +6,4 @@ joblib
 fastapi
 uvicorn
 np
+requests
