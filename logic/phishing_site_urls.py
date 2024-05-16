@@ -129,6 +129,7 @@ def predict_url_phishing(url):
         decision_tree_model.predict(np.array(list(numerical_values.values())).reshape(1, -1))[0],
         knn_model.predict(np.array(list(numerical_values.values())).reshape(1, -1))[0]
     ]
+    print(predictions)
     prediction_counts = Counter(list(predictions))
     # Handle potential ties for the most frequent prediction
     if len(prediction_counts) > 1 and max(prediction_counts.values()) > 1:
