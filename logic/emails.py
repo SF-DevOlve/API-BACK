@@ -96,13 +96,10 @@ def predict_email_body_phishing(data, models=models):
   # Count occurrences of each prediction (works for classification and regression)
   prediction_counts = Counter(list(predictions))
   # Handle potential ties for the most frequent prediction
-  if len(prediction_counts) > 1 and max(prediction_counts.values()) > 1:
-    # Option 1: Random tiebreaker (uncertain case)
-    max_key = random.choice([key for key, count in prediction_counts.items() if count == max(prediction_counts.values())])
-    return int(max_key)
+  most_common_key = prediction_counts.most_common(1)[0][0]
 
   # Return the key with the maximum count
-  return 0 if int(prediction_counts.most_common(1)[0][0])==1 else 1
+  return 0 if int(most_common_key)==1 else 1
 
 if __name__== "__main__":
     vectorizer = joblib.load('models-ai/emails/tfidf_vectorizer.joblib')

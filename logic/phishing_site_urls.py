@@ -12,8 +12,7 @@ import joblib
 import numpy as np
 import random
 from collections import Counter
-
-
+from keras.models import load_model
 
 from urllib.parse import urlparse
 import re
@@ -152,23 +151,22 @@ def predict_url_phishing(url):
     rf_model = joblib.load('models-ai/urlss/Classifier_RandomForest.joblib')
     decision_tree_model = joblib.load('models-ai/urlss/DecisionTreeClassifier.joblib')
     knn_model = joblib.load('models-ai/urlss/KNeighborsClassifier.joblib')
+    ann_model = load_model('models-ai/urlss/ANNClassifier.h5')
 
     numerical_values = get_url(url)
     predictions:list = [
         rf_model.predict(np.array(list(numerical_values.values())).reshape(1, -1))[0],
         decision_tree_model.predict(np.array(list(numerical_values.values())).reshape(1, -1))[0],
-        knn_model.predict(np.array(list(numerical_values.values())).reshape(1, -1))[0]
+        knn_model.predict(np.array(list(numerical_values.values())).reshape(1, -1))[0],
+        int(ann_model.predict(np.array(list(numerical_values.values())).reshape(1, -1))[0][0])
     ]
-    print(predictions)
     prediction_counts = Counter(list(predictions))
     # Handle potential ties for the most frequent prediction
-    if len(prediction_counts) > 1 and max(prediction_counts.values()) > 1:
-        # Option 1: Random tiebreaker (uncertain case)
-        max_key = random.choice([key for key, count in prediction_counts.items() if count == max(prediction_counts.values())])
-        return int(max_key)
+    # Get the most common key (the key with the maximum count)
+    most_common_key = prediction_counts.most_common(1)[0][0]
 
     # Return the key with the maximum count
-    return 0 if int(prediction_counts.most_common(1)[0][0])==1 else 1
+    return 0 if int(most_common_key)==1 else 1
 
 if __name__ == "__main__":
     print(predict_url_phishing("super1000.info/docs"))

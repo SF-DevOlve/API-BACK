@@ -1,2 +1,4 @@
 **.joblib
+**.keras
+**.h5
 /api

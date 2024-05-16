@@ -7,3 +7,5 @@ fastapi
 uvicorn
 np
 requests
+tensorflow
+
