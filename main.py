@@ -12,6 +12,7 @@ import pyttsx3
 import io
 from pydub import AudioSegment
 import base64
+from fastapi.middleware.cors import CORSMiddleware
 
 
 
@@ -185,6 +186,26 @@ async def perform_action(data: Data):
         "errorMessage": audio_segment
     }
 
+
+origins = ['*']
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 # Include the API router in the main app
 app.include_router(api_router)
 
@@ -192,4 +213,12 @@ app.include_router(api_router)
 
 
 
+import socket
 
+# Get the hostname of the machine running the FastAPI app
+hostname = socket.gethostname()
+
+# Get the IP address associated with the hostname
+local_ip = socket.gethostbyname(hostname)
+
+print(f"Connect to your FastAPI application at http://{local_ip}:8000/")
