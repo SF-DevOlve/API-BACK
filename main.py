@@ -2,6 +2,7 @@ from logic.emails import predict_email_body_phishing,check_email_domain
 from logic.phishing_site_urls import predict_url_phishing
 from logic.dns_ import check_phishing_dns
 from voice.main import base64_to_audio_segment, Data
+from llm.main import get_translation_from_language_to_english
 
 from fastapi import (
                     FastAPI, File, UploadFile, Form, status, HTTPException,APIRouter
@@ -21,6 +22,15 @@ import os
 import hashlib
 
 app = FastAPI()
+origins = ['*']
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Create a router for API endpoints
 api_router = APIRouter(prefix="/api")
@@ -44,6 +54,7 @@ async def check_phishing_email(emailBody: str = Form(...)):
   """
   try:
     # Call your logic function to predict phishing (replace with your logic)
+    emailBody = get_translation_from_language_to_english(emailBody)
     prediction = predict_email_body_phishing([emailBody])
     if prediction == 0:
         urls, emails=extract_emails_and_urls(emailBody)
@@ -266,15 +277,6 @@ async def perform_action(data: Data):
         "errorMessage": audio_segment
     }
 
-origins = ['*']
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Include the API router in the main app
 app.include_router(api_router)
@@ -283,12 +285,4 @@ app.include_router(api_router)
 
 
 
-import socket
 
-# Get the hostname of the machine running the FastAPI app
-hostname = socket.gethostname()
-
-# Get the IP address associated with the hostname
-local_ip = socket.gethostbyname(hostname)
-
-print(f"Connect to your FastAPI application at http://{local_ip}:8000/")
