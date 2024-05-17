@@ -1,4 +1,4 @@
-from logic.emails import predict_email_body_phishing,check_email_domain
+from logic.emails import predict_email_body_phishing,check_email_domain,is_valid_email
 from logic.phishing_site_urls import predict_url_phishing
 from logic.dns_ import check_phishing_dns
 from voice.main import base64_to_audio_segment, Data
@@ -100,8 +100,6 @@ async def check_phishing_url(url: str = Form(...),localDnsResolution:str=Form(..
     # Return the prediction result
     return {"phishing": prediction,"dns_phishing":dns_phishing}
   except Exception as e:
-    # Handle any errors during prediction
-    print(f"An error occurred: {e}")
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
 
 @api_router.post("/document/pdf/")
@@ -110,7 +108,7 @@ async def check_phishing_url_inside_pdf(pdf: UploadFile = File(None)):
   This endpoint takes an email body as input and predicts if it's a phishing email.
   """
   try:
-    if emails is None:
+    if pdf is None:
         raise HTTPException(status_code=status,detail="Emails TXT files are missing.")
     # Check if the resume file is a PDF file
     if not pdf.filename.lower().endswith('.pdf'):
@@ -124,19 +122,26 @@ async def check_phishing_url_inside_pdf(pdf: UploadFile = File(None)):
     with open(f"{temp_dir}/{pdf_id}.pdf", "wb") as resume_file:
         shutil.copyfileobj(pdf.file, resume_file)
 
-    urls, emails=get_emails_urls_from_pages_contents_from(pdf)
+    print(str(Path(f"{temp_dir}/{pdf_id}.pdf")))
+    urls, emails=get_emails_urls_from_pages_contents_from(str(Path(f"{temp_dir}/{pdf_id}.pdf")))
+
     # Return the prediction result
     emails_with_phishing = []
-    for email in emails:
-           if not check_email_domain(email):
-                emails_with_phishing.append(email)
+    if emails is not None:
+        for email in emails:
+            if not is_valid_email(email):
+                if not check_email_domain(email):
+                        emails_with_phishing.append(email)
     urls_with_phishing = []
-    for url in urls:
-              if predict_url_phishing(url):
-                 urls_with_phishing.append(url)
-    return {"emails": emails_with_phishing,"urls":urls_with_phishing} 
+    if urls is not None:
+        for url in urls:
+                if predict_url_phishing(url):
+                    urls_with_phishing.append(url)
+    os.remove(f"{temp_dir}/{pdf_id}.pdf")
+    return {"emails": emails_with_phishing,"urls":urls_with_phishing, "phishing": 1 if len(emails_with_phishing)!=0 or len(urls_with_phishing)!=0 else 0} 
      
   except Exception as e:
+    os.remove(f"{temp_dir}/{pdf_id}.pdf")
     # Handle any errors during prediction
     print(f"An error occurred: {e}")
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
@@ -151,13 +156,13 @@ async def check_phishing_url_inside_text(text: str = Form(...)):
     # Return the prediction result
     emails_with_phishing = []
     for email in emails:
-           if not check_email_domain(email):
-                emails_with_phishing.append(email)
+        if not is_valid_email(email) or not check_email_domain(email):
+            emails_with_phishing.append(email)
     urls_with_phishing = []
     for url in urls:
               if predict_url_phishing(url):
                  urls_with_phishing.append(url)
-    return {"emails": emails_with_phishing,"urls":urls_with_phishing} 
+    return {"emails": emails_with_phishing,"urls":urls_with_phishing, "phishing": 1 if len(emails_with_phishing)!=0 or len(urls_with_phishing)!=0 else 0} 
      
   except Exception as e:
     # Handle any errors during prediction

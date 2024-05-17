@@ -53,14 +53,16 @@ def check_phishing_dns(url, local_dns_resolution,number_=12):
         - If the local IP and API IP match, it prints that the URL is likely not phishing.
         - If the local IP and API IP don't match or there was an error in resolution, it prints that the URL might be phishing or there was an error in resolution.
     """
-    domain = format_domain(url)  # Extract domain from URL
-    local_ip = local_dns_resolution
-    for i in range(number_):
-        api_ip = api_dns_resolution(domain)
-        if local_ip and api_ip and local_ip == api_ip:
-            return True
-    return False
-
+    try:
+        domain = format_domain(url)  # Extract domain from URL
+        local_ip = local_dns_resolution
+        for i in range(number_):
+            api_ip = api_dns_resolution(domain)
+            if local_ip and api_ip and local_ip == api_ip:
+                return True
+        return False
+    except Exception as e:
+        return False
 if __name__ == "__main__":
     # url = input("Enter the URL to check for phishing: ")
     ip=api_dns_resolution(format_domain("www.google.com"))
