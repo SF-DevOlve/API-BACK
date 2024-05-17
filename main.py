@@ -66,7 +66,7 @@ async def check_phishing_email(emailBody: str = Form(...)):
         for url in urls:
             if predict_url_phishing(url):
                 urls_with_phishing.append(url)
-        return {"phishing": 1,"emails": emails_with_phishing,"urls":urls_with_phishing}
+        return {"phishing": 1 if len(emails_with_phishing)>0 and len(urls_with_phishing)>0 else 0,"emails": emails_with_phishing,"urls":urls_with_phishing}
     
     # Return the prediction result
     return {"phishing": prediction}
@@ -80,7 +80,9 @@ async def check_phishing_email_structure(email: str = Form(...)):
   try:
     ok= check_email_domain(email)
     if ok:
+        print("Email is valid")
         return {"phishing": 0}
+    
     return {"phishing": 1}
   except Exception as e:
     # Handle any errors during prediction

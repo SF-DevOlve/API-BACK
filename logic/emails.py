@@ -103,9 +103,13 @@ def predict_email_body_phishing(data, models=models):
 
 
 def check_email_domain(email):
-    if not is_valid_email(email):
+    try:
+        domain=email.split('@')[1]
+        if not is_valid_email(email):
+            return False
+        return domain_exists(domain)
+    except:
         return False
-    return domain_exists(email)
 
 
 if __name__== "__main__":
