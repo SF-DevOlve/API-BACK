@@ -55,17 +55,19 @@ def check_phishing(url, local_dns_resolution):
     """
     domain = format_domain(url)  # Extract domain from URL
     local_ip = local_dns_resolution
-    api_ip = api_dns_resolution(domain)
-
-    if local_ip and api_ip and local_ip == api_ip:
-        return True
-    else:
-        return False
+    for i in range(10):
+        api_ip = api_dns_resolution(domain)
+        if local_ip and api_ip and local_ip == api_ip:
+            return True
+    return False
 
 if __name__ == "__main__":
     # url = input("Enter the URL to check for phishing: ")
-    print(format_domain("https://www.google.com/"))
-    ip=api_dns_resolution("www.google.com")
+    ip=api_dns_resolution(format_domain("www.google.com"))
     print(ip)
     print(check_phishing("www.google.com",ip))
     
+
+
+
+

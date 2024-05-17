@@ -9,3 +9,24 @@ np
 requests
 tensorflow
 
+
+## Voice 
+
+pymysql>=1.1.0
+pyttsx3==2.90
+speechrecognition==3.10.0
+pydub==0.25.1
+cryptography>=3.4.8
+
+
+# LangChain and LLM
+langchain
+PyPDF2
+pypdf
+vertexai 
+langchain_google_genai
+
+
+# envirement
+
+python-dotenv
