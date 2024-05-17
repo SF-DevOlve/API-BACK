@@ -1,6 +1,6 @@
-from logic.emails import predict_email_body_phishing
+from logic.emails import predict_email_body_phishing,check_email_domain
 from logic.phishing_site_urls import predict_url_phishing
-from logic.dns_ import check_phishing
+from logic.dns_ import check_phishing_dns
 from voice.main import base64_to_audio_segment, Data
 
 from fastapi import (
@@ -12,21 +12,18 @@ import pyttsx3
 import io
 from pydub import AudioSegment
 import base64
+from documents.main import get_emails_urls_from_pages_contents_from,extract_emails_and_urls
 from fastapi.middleware.cors import CORSMiddleware
-
-
-
+import uuid
 import shutil
 from pathlib import Path
 import os
 import hashlib
 
-
 app = FastAPI()
 
 # Create a router for API endpoints
 api_router = APIRouter(prefix="/api")
-
 
 # Function to create the temporary folder if it doesn't exist
 def create_folder(folder):
@@ -56,6 +53,18 @@ async def check_phishing_email(emailBody: str = Form(...)):
     print(f"An error occurred: {e}")
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
 
+@api_router.post("/email/email-phishing")
+async def check_phishing_email_structure(email: str = Form(...)):
+  try:
+    ok= check_email_domain(email)
+    if ok:
+        return {"phishing": 0}
+    return {"phishing": 1}
+  except Exception as e:
+    # Handle any errors during prediction
+    print(f"An error occurred: {e}")
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
+  
 @api_router.post("/url/")
 async def check_phishing_url(url: str = Form(...)):
   """
@@ -72,6 +81,65 @@ async def check_phishing_url(url: str = Form(...)):
     print(f"An error occurred: {e}")
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
 
+@api_router.post("/document/pdf/")
+async def check_phishing_url_inside_pdf(pdf: UploadFile = File(None)):
+  """
+  This endpoint takes an email body as input and predicts if it's a phishing email.
+  """
+  try:
+    if emails is None:
+        raise HTTPException(status_code=status,detail="Emails TXT files are missing.")
+    # Check if the resume file is a PDF file
+    if not pdf.filename.lower().endswith('.pdf'):
+        raise HTTPException(detail="The resume file must be a PDF file.")
+    
+    temp_dir:str = str(Path("./temp"))
+    # Check if temp_dir exists, if not, create it
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+    pdf_id:str = str(uuid.uuid4())
+    with open(f"{temp_dir}/{pdf_id}.pdf", "wb") as resume_file:
+        shutil.copyfileobj(pdf.file, resume_file)
+
+    urls, emails=get_emails_urls_from_pages_contents_from(pdf)
+    # Return the prediction result
+    emails_with_phishing = []
+    for email in emails:
+           if not check_email_domain(email):
+                emails_with_phishing.append(email)
+    urls_with_phishing = []
+    for url in urls:
+              if predict_url_phishing(url):
+                 urls_with_phishing.append(url)
+    return {"emails": emails_with_phishing,"urls":urls_with_phishing} 
+     
+  except Exception as e:
+    # Handle any errors during prediction
+    print(f"An error occurred: {e}")
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
+
+@api_router.post("/document/text/")
+async def check_phishing_url_inside_text(text: str = Form(...)):
+  """
+  This endpoint takes an email body as input and predicts if it's a phishing email.
+  """
+  try:
+    urls, emails=extract_emails_and_urls(text)
+    # Return the prediction result
+    emails_with_phishing = []
+    for email in emails:
+           if not check_email_domain(email):
+                emails_with_phishing.append(email)
+    urls_with_phishing = []
+    for url in urls:
+              if predict_url_phishing(url):
+                 urls_with_phishing.append(url)
+    return {"emails": emails_with_phishing,"urls":urls_with_phishing} 
+     
+  except Exception as e:
+    # Handle any errors during prediction
+    print(f"An error occurred: {e}")
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
 
 @api_router.post("/url/dns/")
 async def check_phishing_url_dns(url: str = Form(...),local_dns_resolution:str=Form(...)):
@@ -80,9 +148,9 @@ async def check_phishing_url_dns(url: str = Form(...),local_dns_resolution:str=F
   """
   try:
     # Call your logic function to predict phishing (replace with your logic)
-    prediction = 0 if check_phishing(url,local_dns_resolution) else 1
+    phishing = 0 if check_phishing_dns(url,local_dns_resolution) else 1
     # Return the prediction result
-    return {"phishing": prediction}
+    return {"phishing": phishing}
   except Exception as e:
     # Handle any errors during prediction
     print(f"An error occurred: {e}")
@@ -186,7 +254,6 @@ async def perform_action(data: Data):
         "errorMessage": audio_segment
     }
 
-
 origins = ['*']
 
 app.add_middleware(
@@ -196,15 +263,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 
 # Include the API router in the main app
 app.include_router(api_router)

@@ -4,7 +4,6 @@ import uuid
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), '.'))
 sys.path.append(parent_dir)
 from dotenv import load_dotenv
-from langchain_community.document_loaders import PyPDFLoader
 from pathlib import Path
 from langchain_google_genai import ChatGoogleGenerativeAI
 import re
@@ -17,26 +16,6 @@ GEMINI_API_KEY=os.getenv("GEMINI_API_KEY")
 MODEL_NAME=os.getenv("MODEL_NAME")
 PROJECT_NAME=os.getenv("PROJECT_NAME")
 
-def get_pages_contents_from_pdf(resume_pdf_path:str)->str:
-    """
-    Extracts the content of all pages from a PDF file.
-
-    Args:
-        resume_pdf_path (str): The path to the PDF file.
-
-    Returns:
-        str: The concatenated content of all pages in the PDF.
-
-    Example:
-        >>> get_pages_contents_from_pdf("./resume.pdf")
-        'Page 1 content\nPage 2 content\n...'
-    """
-    loader = PyPDFLoader(resume_pdf_path)
-    documents=loader.load()
-    page_contents:str=""
-    for document in documents:
-        page_contents+=dict(document)["page_content"]+"\n"
-    return page_contents
 
 def get_translation_from_language_to_english(text: str) -> str:
   """

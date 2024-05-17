@@ -38,7 +38,7 @@ def api_dns_resolution(domain):
     except requests.RequestException:
         return False
 
-def check_phishing(url, local_dns_resolution):
+def check_phishing_dns(url, local_dns_resolution,number_=12):
     """
     Checks if a given URL is likely to be a phishing attempt.
 
@@ -55,7 +55,7 @@ def check_phishing(url, local_dns_resolution):
     """
     domain = format_domain(url)  # Extract domain from URL
     local_ip = local_dns_resolution
-    for i in range(10):
+    for i in range(number_):
         api_ip = api_dns_resolution(domain)
         if local_ip and api_ip and local_ip == api_ip:
             return True
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     # url = input("Enter the URL to check for phishing: ")
     ip=api_dns_resolution(format_domain("www.google.com"))
     print(ip)
-    print(check_phishing("www.google.com",ip))
+    print(check_phishing_dns("www.google.com",ip))
     
 
 
