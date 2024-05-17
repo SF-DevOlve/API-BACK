@@ -45,7 +45,18 @@ async def check_phishing_email(emailBody: str = Form(...)):
   try:
     # Call your logic function to predict phishing (replace with your logic)
     prediction = predict_email_body_phishing([emailBody])
-
+    if prediction == 0:
+        urls, emails=extract_emails_and_urls(emailBody)
+        emails_with_phishing = []
+        for email in emails:
+            if not check_email_domain(email):
+                emails_with_phishing.append(email)
+        urls_with_phishing = []
+        for url in urls:
+            if predict_url_phishing(url):
+                urls_with_phishing.append(url)
+        return {"phishing": 1,"emails": emails_with_phishing,"urls":urls_with_phishing}
+    
     # Return the prediction result
     return {"phishing": prediction}
   except Exception as e:
@@ -66,16 +77,17 @@ async def check_phishing_email_structure(email: str = Form(...)):
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
   
 @api_router.post("/url/")
-async def check_phishing_url(url: str = Form(...)):
+async def check_phishing_url(url: str = Form(...),local_dns_resolution:str=Form(...)):
   """
   This endpoint takes an email body as input and predicts if it's a phishing email.
   """
   try:
     # Call your logic function to predict phishing (replace with your logic)
     prediction = predict_url_phishing(url)
-
+    # Call your logic function to predict phishing (replace with your logic)
+    dns_phishing = 0 if check_phishing_dns(url,local_dns_resolution) else 1
     # Return the prediction result
-    return {"phishing": prediction}
+    return {"phishing": prediction,"dns_phishing":dns_phishing}
   except Exception as e:
     # Handle any errors during prediction
     print(f"An error occurred: {e}")
