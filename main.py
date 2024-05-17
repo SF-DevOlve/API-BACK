@@ -24,14 +24,14 @@ import hashlib
 app = FastAPI()
 origins = ['*']
 
+# Allow all origins (*), allow all methods, allow all headers
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # Create a router for API endpoints
 api_router = APIRouter(prefix="/api")
 
@@ -204,7 +204,7 @@ async def perform_action(data: Data):
         conn = pymysql.connect(
             host="localhost",
             user="root",
-            password="",
+            password="root",
             database="vishing",
             charset="utf8mb4",
             cursorclass=pymysql.cursors.DictCursor,
